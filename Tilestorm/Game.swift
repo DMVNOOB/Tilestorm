@@ -30,6 +30,7 @@ final class Game {
 
     var status: String {
         if state.isFinished { return "Finished!" }
+        if isBoardTileSelected { return "Tap a cell to move it, or the rack to put it back" }
         if !rack.isEmpty { return rack.count == 1 ? "1 tile to place" : "\(rack.count) tiles to place" }
         guard let problem = activeProblems.first else {
             return bag.isEmpty ? "All valid. Tap Finish" : "All valid. Draw a tile"
@@ -59,14 +60,29 @@ final class Game {
         selectedTileID = selectedTileID == tile.id ? nil : tile.id
     }
 
-    /// Tapping a cell places the selected rack tile there, or sends an existing board tile back to the rack.
+    /// With a tile selected, tapping a cell moves it there (swapping with any tile already there).
+    /// With nothing selected, tapping a board tile selects it.
     func tapCell(_ cell: GridPosition) {
+        let tapped = board.tile(at: cell)
         if let selectedTileID {
-            try? state.put(selectedTileID, at: cell)
+            if tapped?.id != selectedTileID {
+                try? state.put(selectedTileID, at: cell)
+            }
             self.selectedTileID = nil
-        } else if let tile = board.tile(at: cell) {
-            try? state.returnToRack(tile.id)
+        } else if let tapped {
+            selectedTileID = tapped.id
         }
+    }
+
+    /// Sends the selected tile back to the rack if it's on the board.
+    func returnSelectionToRack() {
+        guard let selectedTileID, board.position(of: selectedTileID) != nil else { return }
+        try? state.returnToRack(selectedTileID)
+        self.selectedTileID = nil
+    }
+
+    private var isBoardTileSelected: Bool {
+        selectedTileID.map { board.position(of: $0) != nil } ?? false
     }
 
     func put(_ tile: Tile, at cell: GridPosition) {
@@ -76,6 +92,9 @@ final class Game {
 
     func returnToRack(_ tile: Tile) {
         try? state.returnToRack(tile.id)
+        if selectedTileID == tile.id {
+            selectedTileID = nil
+        }
     }
 
     func draw() {

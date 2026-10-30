@@ -32,10 +32,12 @@ struct ContentView: View {
             BoardView(
                 board: game.board,
                 camera: $camera,
+                selectedTileID: game.selectedTileID,
                 draggingTileID: draggedTile?.tile.id,
                 invalidCells: game.invalidCells,
                 dragHandlers: dragHandlers,
-                onTapCell: game.tapCell
+                onTapCell: game.tapCell,
+                onDoubleTapTile: game.returnToRack
             )
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(GameSpace.name)) } action: { boardFrame = $0 }
 
@@ -65,7 +67,8 @@ struct ContentView: View {
                 selectedTileID: game.selectedTileID,
                 draggingTileID: draggedTile?.tile.id,
                 dragHandlers: dragHandlers,
-                onTap: game.toggleSelection
+                onTap: game.toggleSelection,
+                onTapEmptySpace: game.returnSelectionToRack
             )
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(GameSpace.name)) } action: { rackFrame = $0 }
         }
@@ -119,6 +122,7 @@ struct RackView: View {
     var draggingTileID: Tile.ID?
     let dragHandlers: TileDragHandlers
     let onTap: (Tile) -> Void
+    let onTapEmptySpace: () -> Void
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 40), spacing: 6)], spacing: 6) {
@@ -132,6 +136,8 @@ struct RackView: View {
         }
         .padding()
         .frame(minHeight: 60)
+        .contentShape(.rect)
+        .onTapGesture(perform: onTapEmptySpace)
         .background(.bar)
         .accessibilityLabel("Rack")
     }

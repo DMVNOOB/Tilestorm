@@ -5,10 +5,12 @@ import TileEngine
 struct BoardView: View {
     let board: Board
     @Binding var camera: BoardCamera
+    var selectedTileID: Tile.ID?
     var draggingTileID: Tile.ID?
     var invalidCells: Set<GridPosition> = []
     let dragHandlers: TileDragHandlers
     let onTapCell: (GridPosition) -> Void
+    let onDoubleTapTile: (Tile) -> Void
 
     @GestureState private var panTranslation: CGSize = .zero
     @GestureState private var pinchScale: CGFloat = 1
@@ -21,9 +23,18 @@ struct BoardView: View {
                 GridLines(origin: live.origin(in: geometry.size), step: live.step)
 
                 ForEach(Array(board.tiles), id: \.value.id) { cell, tile in
-                    TileView(tile: tile, size: live.step - 2, isInvalid: invalidCells.contains(cell))
+                    TileView(
+                        tile: tile,
+                        size: live.step - 2,
+                        isSelected: tile.id == selectedTileID,
+                        isInvalid: invalidCells.contains(cell)
+                    )
                         .opacity(tile.id == draggingTileID ? 0.3 : 1)
+                        // Double-tap must be declared before single-tap so SwiftUI tells them apart.
+                        .onTapGesture(count: 2) { onDoubleTapTile(tile) }
+                        .onTapGesture { onTapCell(cell) }
                         .draggableTile(tile, handlers: dragHandlers)
+                        .accessibilityHint("Double-tap to return it to the rack")
                         .position(live.center(of: cell, in: geometry.size))
                 }
             }
