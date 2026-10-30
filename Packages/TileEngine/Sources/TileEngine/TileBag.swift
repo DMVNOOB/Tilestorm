@@ -21,6 +21,11 @@ public struct TileBag: Sendable {
         self.tiles = tiles
     }
 
+    /// A bag holding exactly these tiles, drawn from the end. Useful for set-up game states.
+    public init(tiles: [Tile]) {
+        self.tiles = tiles
+    }
+
     public init(distribution: [Character: Int] = TileDistribution.standard) {
         var generator = SystemRandomNumberGenerator()
         self.init(distribution: distribution, using: &generator)

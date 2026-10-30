@@ -41,8 +41,16 @@ final class Game {
         }
     }
 
-    func newGame() {
-        state = SoloGame()
+    init() {
+        #if DEBUG
+        if let scenario = Scenario.fromLaunchArguments {
+            state = scenario.makeGame()
+        }
+        #endif
+    }
+
+    func start(_ state: SoloGame) {
+        self.state = state
         selectedTileID = nil
         showFinished = false
     }

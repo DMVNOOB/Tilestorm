@@ -34,6 +34,13 @@ public struct SoloGame: Sendable {
         self.wordList = wordList
     }
 
+    /// A game already in progress, e.g. a test scenario. Tile ids must be unique across bag, rack, and board.
+    public init(bag: TileBag, player: PlayerTiles, wordList: WordList = .enable) {
+        self.bag = bag
+        self.player = player
+        self.wordList = wordList
+    }
+
     public init(distribution: [Character: Int] = TileDistribution.standard, wordList: WordList = .enable) {
         var generator = SystemRandomNumberGenerator()
         self.init(distribution: distribution, wordList: wordList, using: &generator)

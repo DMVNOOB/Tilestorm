@@ -115,3 +115,12 @@ private func placeWholeRack(_ game: inout SoloGame) throws {
     #expect(throws: SoloGameError.unknownTile(9999)) { try game.swap(9999) }
     #expect(game.bag.count == 123)
 }
+
+@Test func gameInProgressCanFinish() throws {
+    var player = PlayerTiles(rack: [Tile(id: 0, letter: "A"), Tile(id: 1, letter: "T")])
+    try player.put(0, at: GridPosition(row: 0, column: 0))
+    try player.put(1, at: GridPosition(row: 0, column: 1))
+    var game = SoloGame(bag: TileBag(tiles: []), player: player, wordList: WordList(["AT"]))
+    #expect(game.canDraw)
+    #expect(try game.draw() == .finished)
+}

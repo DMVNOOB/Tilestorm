@@ -16,6 +16,14 @@ struct ContentView: View {
                 Spacer()
                 Text("\(game.bag.count) in bag")
                     .foregroundStyle(.secondary)
+                #if DEBUG
+                Menu("Scenarios", systemImage: "ladybug") {
+                    ForEach(Scenario.allCases) { scenario in
+                        Button(scenario.title) { start(scenario.makeGame()) }
+                    }
+                }
+                .labelStyle(.iconOnly)
+                #endif
                 Button("New Game", action: newGame)
                     .buttonStyle(.bordered)
             }
@@ -77,7 +85,11 @@ struct ContentView: View {
     }
 
     private func newGame() {
-        game.newGame()
+        start(SoloGame())
+    }
+
+    private func start(_ state: SoloGame) {
+        game.start(state)
         camera = BoardCamera()
     }
 
