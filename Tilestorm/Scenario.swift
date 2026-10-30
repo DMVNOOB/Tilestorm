@@ -8,6 +8,7 @@ enum Scenario: String, CaseIterable, Identifiable {
     case readyToFinish
     case oneTileLeft
     case invalidGrid
+    case finished
 
     var id: String { rawValue }
 
@@ -16,8 +17,12 @@ enum Scenario: String, CaseIterable, Identifiable {
         case .readyToFinish: "Ready to finish"
         case .oneTileLeft: "One tile left (N)"
         case .invalidGrid: "Invalid grid"
+        case .finished: "Finished (results)"
         }
     }
+
+    /// Taps Finish straight away, to show the results card.
+    var finishesImmediately: Bool { self == .finished }
 
     static var fromLaunchArguments: Scenario? {
         UserDefaults.standard.string(forKey: "scenario").flatMap(Scenario.init(rawValue:))
@@ -25,7 +30,7 @@ enum Scenario: String, CaseIterable, Identifiable {
 
     func makeGame() -> SoloGame {
         switch self {
-        case .readyToFinish:
+        case .readyToFinish, .finished:
             // CRATE across, CODE and EARN down.
             ScenarioBuilder(board: [
                 "CRATE",

@@ -9,27 +9,26 @@ struct TileView: View {
     var isInvalid = false
 
     var body: some View {
+        // Proportions match the 56pt tile in the Figma design.
+        let unit = size / 56
         Text(String(tile.letter))
-            .font(.system(size: size * 0.55, weight: .semibold, design: .rounded))
+            .font(GameFont.tile(size * 0.54))
+            .foregroundStyle(isInvalid ? Color.terracotta : .cocoa)
             .frame(width: size, height: size)
-            .background(Color.tileFace, in: .rect(cornerRadius: size * 0.18))
-            .overlay {
-                RoundedRectangle(cornerRadius: size * 0.18)
-                    .strokeBorder(borderColor, lineWidth: isSelected || isInvalid ? 3 : 1)
+            .background {
+                RaisedBackground(
+                    face: isSelected ? .butter : .cream,
+                    edge: isSelected ? .mustard : (isInvalid ? .tan : .tileEdge),
+                    lift: (isSelected ? 7 : 4) * unit,
+                    cornerRadius: 12 * unit,
+                    outline: isSelected ? .mustard : (isInvalid ? .terracotta : .tileOutline),
+                    outlineWidth: (isSelected || isInvalid ? 3 : 1.5) * unit
+                )
             }
-            .foregroundStyle(.black)
+            // A selected tile sits higher, as if picked up.
+            .offset(y: isSelected ? -3 * unit : 0)
             .accessibilityLabel("Tile \(String(tile.letter))")
             .accessibilityAddTraits(isSelected ? .isSelected : [])
             .accessibilityValue(isInvalid ? "Not in a valid word" : "")
     }
-
-    private var borderColor: Color {
-        if isSelected { return .accentColor }
-        if isInvalid { return .red }
-        return .black.opacity(0.15)
-    }
-}
-
-extension Color {
-    static let tileFace = Color(red: 0.96, green: 0.93, blue: 0.86)
 }
