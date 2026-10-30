@@ -37,6 +37,15 @@ public struct PlayerTiles: Sendable {
         }
     }
 
+    /// Takes a tile out of the player's hand entirely, from the rack or the board.
+    public mutating func remove(_ tileID: Tile.ID) throws(PlayerTilesError) -> Tile {
+        if let cell = board.position(of: tileID) {
+            return board.remove(at: cell)!
+        }
+        guard let index = rack.firstIndex(where: { $0.id == tileID }) else { throw .unknownTile(tileID) }
+        return rack.remove(at: index)
+    }
+
     /// Takes a tile off the board and puts it at the end of the rack. Does nothing if it's already on the rack.
     public mutating func returnToRack(_ tileID: Tile.ID) throws(PlayerTilesError) {
         guard let cell = board.position(of: tileID) else {

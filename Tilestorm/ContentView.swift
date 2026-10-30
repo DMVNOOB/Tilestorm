@@ -30,6 +30,21 @@ struct ContentView: View {
             )
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(GameSpace.name)) } action: { boardFrame = $0 }
 
+            HStack {
+                Button("Swap", systemImage: "arrow.triangle.2.circlepath", action: game.swapSelection)
+                    .disabled(!game.canSwapSelection)
+                    .accessibilityHint("Returns the selected tile to the bag and draws three")
+                Spacer()
+                Button("Draw", systemImage: "plus", action: game.draw)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!game.canDraw)
+                    .accessibilityHint("Takes one tile from the bag. Available when every tile is on the board")
+            }
+            .buttonStyle(.bordered)
+            .padding(.horizontal)
+            .padding(.top, 10)
+            .background(.bar)
+
             RackView(
                 tiles: game.rack,
                 selectedTileID: game.selectedTileID,

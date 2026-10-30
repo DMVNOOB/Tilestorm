@@ -1,24 +1,21 @@
 import Observation
 import TileEngine
 
-/// Local solo game state. Rules live in TileEngine; this only coordinates the bag, the player's tiles, and selection.
+/// Local solo game state. Rules live in TileEngine's SoloGame; this adds UI concerns like selection.
 @Observable
 final class Game {
-    private(set) var bag = TileBag()
-    private(set) var player = PlayerTiles()
+    private(set) var state = SoloGame()
     private(set) var selectedTileID: Tile.ID?
 
-    var rack: [Tile] { player.rack }
-    var board: Board { player.board }
-
-    init() {
-        newGame()
-    }
+    var bag: TileBag { state.bag }
+    var rack: [Tile] { state.player.rack }
+    var board: Board { state.player.board }
+    var canDraw: Bool { state.canDraw }
+    var canSwapSelection: Bool { selectedTileID != nil && state.canSwap }
 
     func newGame() {
-        bag = TileBag()
+        state = SoloGame()
         selectedTileID = nil
-        player = PlayerTiles(rack: (try? bag.draw(StartingHand.size(forPlayers: 1))) ?? [])
     }
 
     func toggleSelection(_ tile: Tile) {
@@ -28,19 +25,29 @@ final class Game {
     /// Tapping a cell places the selected rack tile there, or sends an existing board tile back to the rack.
     func tapCell(_ cell: GridPosition) {
         if let selectedTileID {
-            try? player.put(selectedTileID, at: cell)
+            try? state.put(selectedTileID, at: cell)
             self.selectedTileID = nil
         } else if let tile = board.tile(at: cell) {
-            try? player.returnToRack(tile.id)
+            try? state.returnToRack(tile.id)
         }
     }
 
     func put(_ tile: Tile, at cell: GridPosition) {
-        try? player.put(tile.id, at: cell)
+        try? state.put(tile.id, at: cell)
         selectedTileID = nil
     }
 
     func returnToRack(_ tile: Tile) {
-        try? player.returnToRack(tile.id)
+        try? state.returnToRack(tile.id)
+    }
+
+    func draw() {
+        try? state.draw()
+    }
+
+    func swapSelection() {
+        guard let selectedTileID else { return }
+        try? state.swap(selectedTileID)
+        self.selectedTileID = nil
     }
 }
