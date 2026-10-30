@@ -20,7 +20,7 @@ struct BoardView: View {
             let live = camera.adjusted(pan: panTranslation, pinch: pinchScale)
 
             ZStack {
-                GridLines(origin: live.origin(in: geometry.size), step: live.step)
+                GridDots(origin: live.origin(in: geometry.size), step: live.step)
 
                 ForEach(Array(board.tiles), id: \.value.id) { cell, tile in
                     TileView(
@@ -53,35 +53,33 @@ struct BoardView: View {
                     )
             )
         }
-        .background(Color(.secondarySystemBackground))
-        .clipped()
+        .background(Color.sand.shadow(.inner(color: .toffee.opacity(0.25), radius: 8, y: 3)))
+        .clipShape(.rect(cornerRadius: 28, style: .continuous))
         .accessibilityLabel("Board")
     }
 }
 
-private struct GridLines: View {
+/// A dot at the centre of every cell, where tiles land.
+private struct GridDots: View {
     let origin: CGPoint
     let step: CGFloat
 
     var body: some View {
         Canvas { context, size in
-            var path = Path()
-            // Lines sit half a cell either side of each cell centre.
-            var x = (origin.x - step / 2).truncatingRemainder(dividingBy: step)
+            let radius: CGFloat = 2
+            var dots = Path()
+            var x = origin.x.truncatingRemainder(dividingBy: step)
             if x < 0 { x += step }
             while x <= size.width {
-                path.move(to: CGPoint(x: x, y: 0))
-                path.addLine(to: CGPoint(x: x, y: size.height))
+                var y = origin.y.truncatingRemainder(dividingBy: step)
+                if y < 0 { y += step }
+                while y <= size.height {
+                    dots.addEllipse(in: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2))
+                    y += step
+                }
                 x += step
             }
-            var y = (origin.y - step / 2).truncatingRemainder(dividingBy: step)
-            if y < 0 { y += step }
-            while y <= size.height {
-                path.move(to: CGPoint(x: 0, y: y))
-                path.addLine(to: CGPoint(x: size.width, y: y))
-                y += step
-            }
-            context.stroke(path, with: .color(.primary.opacity(0.08)), lineWidth: 1)
+            context.fill(dots, with: .color(.tan.opacity(0.5)))
         }
     }
 }
