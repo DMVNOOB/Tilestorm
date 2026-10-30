@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/icon.png" width="128" alt="Tilestorm app icon: a tilted cream T tile on a honey-yellow background">
+</p>
+
 # Tilestorm
 
 A native iPhone and iPad word-tile game. Build your own crossword from a hand of letter tiles, draw more as you go, and use every tile in the bag to finish.
