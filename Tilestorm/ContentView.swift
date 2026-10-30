@@ -1,50 +1,46 @@
 import SwiftUI
 import TileEngine
 
-/// Placeholder screen: deals a starting hand from the engine so the app/engine wiring is visible.
-/// The board, rack interactions, and Split/Peel/Dump come next.
 struct ContentView: View {
-    @State private var bag = TileBag()
-    @State private var rack: [Tile] = []
+    @State private var game = Game()
 
     var body: some View {
-        VStack(spacing: 24) {
-            Text("Tilestorm")
-                .font(.largeTitle.bold())
-
-            Text("\(bag.count) tiles in the bag")
-                .foregroundStyle(.secondary)
-
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 44), spacing: 8)], spacing: 8) {
-                ForEach(rack) { tile in
-                    TileView(tile: tile)
-                }
+        VStack(spacing: 0) {
+            HStack {
+                Text("Tilestorm")
+                    .font(.title2.bold())
+                Spacer()
+                Text("\(game.bag.count) in bag")
+                    .foregroundStyle(.secondary)
+                Button("New Game", action: game.newGame)
+                    .buttonStyle(.bordered)
             }
-            .padding(.horizontal)
+            .padding()
 
-            Button("New Hand", action: deal)
-                .buttonStyle(.borderedProminent)
+            BoardView(board: game.board, onTapCell: game.tapCell)
+
+            RackView(tiles: game.rack, selectedTileID: game.selectedTileID, onTap: game.toggleSelection)
         }
-        .padding()
-        .onAppear(perform: deal)
-    }
-
-    private func deal() {
-        bag = TileBag()
-        rack = (try? bag.draw(StartingHand.size(forPlayers: 1))) ?? []
     }
 }
 
-struct TileView: View {
-    let tile: Tile
+struct RackView: View {
+    let tiles: [Tile]
+    let selectedTileID: Tile.ID?
+    let onTap: (Tile) -> Void
 
     var body: some View {
-        Text(String(tile.letter))
-            .font(.title2.weight(.semibold))
-            .frame(width: 44, height: 44)
-            .background(.yellow.opacity(0.85), in: .rect(cornerRadius: 8))
-            .foregroundStyle(.black)
-            .accessibilityLabel("Tile \(String(tile.letter))")
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 40), spacing: 6)], spacing: 6) {
+            ForEach(tiles) { tile in
+                TileView(tile: tile, size: 40, isSelected: tile.id == selectedTileID)
+                    .onTapGesture { onTap(tile) }
+                    .accessibilityAddTraits(.isButton)
+            }
+        }
+        .padding()
+        .frame(minHeight: 60)
+        .background(.bar)
+        .accessibilityLabel("Rack")
     }
 }
 
