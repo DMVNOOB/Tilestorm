@@ -1,15 +1,15 @@
 # Tilestorm
 
-A minimal native iPhone and iPad word-tile game. Build your own crossword from a hand of letter tiles, draw more as you go, and use every tile in the bag to finish.
+A native iPhone and iPad word-tile game. Build your own crossword from a hand of letter tiles, draw more as you go, and use every tile in the bag to finish.
 
 <p align="center">
-  <img src="docs/screenshots/iphone-new-game.png" width="240" alt="A new game: an empty grid board above a rack of 21 letter tiles">
-  <img src="docs/screenshots/iphone-invalid.png" width="240" alt="An invalid grid: the non-word CRATX is outlined in red and the status asks you to connect all your words">
-  <img src="docs/screenshots/iphone-ready.png" width="240" alt="A valid grid of CRATE, CODE and EARN with the bag empty and the Finish button enabled">
+  <img src="docs/screenshots/iphone-title.png" width="240" alt="The title screen: TILE and STORM spelled in tilted cream tiles on a warm yellow background, with Play and How to Play buttons">
+  <img src="docs/screenshots/iphone-invalid.png" width="240" alt="A game in progress: the non-word CRATX is outlined in terracotta on a sand board, and the status asks you to connect all your words">
+  <img src="docs/screenshots/iphone-finished.png" width="240" alt="The results card: DONE in tiles, Storm cleared!, and tiles, words and time stats with New Game and Back to Title buttons">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/ipad-ready.png" width="520" alt="The same finished grid on iPad">
+  <img src="docs/screenshots/ipad-game.png" width="520" alt="A game on iPad with one tile left on the wooden rack">
 </p>
 
 ## How to play
@@ -26,6 +26,6 @@ A minimal native iPhone and iPad word-tile game. Build your own crossword from a
 - `Tilestorm.xcodeproj`: the SwiftUI app (iOS 18+, iPhone and iPad)
 - `Packages/TileEngine`: the UI-independent rules engine. Run its tests with `swift test`.
 
-Words are checked against the [ENABLE word list](https://github.com/dolph/dictionary) (public domain).
+Words are checked against the [ENABLE word list](https://github.com/dolph/dictionary) (public domain). The app uses the [Lilita One](https://fonts.google.com/specimen/Lilita+One) and [Fredoka](https://fonts.google.com/specimen/Fredoka) fonts under the SIL Open Font License.
 
-Debug builds include a Scenarios menu (the ladybug) for jumping straight to set-up game states. You can also launch into one with `-scenario readyToFinish`, `oneTileLeft`, or `invalidGrid`.
+Debug builds list test scenarios in the pause menu for jumping straight to set-up game states. You can also launch into one with `-scenario readyToFinish`, `oneTileLeft`, `invalidGrid`, or `finished`.
