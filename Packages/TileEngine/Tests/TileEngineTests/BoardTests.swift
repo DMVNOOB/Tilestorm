@@ -63,3 +63,18 @@ private let right = GridPosition(row: 0, column: 1)
     var board = Board()
     #expect(throws: BoardError.cellEmpty(origin)) { try board.move(from: origin, to: right) }
 }
+
+@Test func swapExchangesTiles() throws {
+    var board = Board()
+    try board.place(a, at: origin)
+    try board.place(b, at: right)
+    try board.swap(origin, right)
+    #expect(board.tile(at: origin) == b)
+    #expect(board.tile(at: right) == a)
+}
+
+@Test func swapWithEmptyCellThrows() throws {
+    var board = Board()
+    try board.place(a, at: origin)
+    #expect(throws: BoardError.cellEmpty(right)) { try board.swap(origin, right) }
+}

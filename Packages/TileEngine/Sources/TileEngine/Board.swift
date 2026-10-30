@@ -50,4 +50,11 @@ public struct Board: Sendable {
         tiles[source] = nil
         tiles[destination] = tile
     }
+
+    public mutating func swap(_ first: GridPosition, _ second: GridPosition) throws(BoardError) {
+        guard let firstTile = tiles[first] else { throw .cellEmpty(first) }
+        guard let secondTile = tiles[second] else { throw .cellEmpty(second) }
+        tiles[first] = secondTile
+        tiles[second] = firstTile
+    }
 }

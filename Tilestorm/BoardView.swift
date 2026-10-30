@@ -1,73 +1,49 @@
 import SwiftUI
 import TileEngine
 
-/// An unbounded grid that pans with a drag and zooms with a pinch.
-/// Pan offset is kept in unscaled board points so zooming stays centred on the middle of the view.
+/// An unbounded grid that pans with a drag on empty space and zooms with a pinch.
 struct BoardView: View {
     let board: Board
+    @Binding var camera: BoardCamera
+    var draggingTileID: Tile.ID?
+    let dragHandlers: TileDragHandlers
     let onTapCell: (GridPosition) -> Void
 
-    static let cellSize: CGFloat = 44
-    private static let scaleRange: ClosedRange<CGFloat> = 0.4...2.5
-
-    @State private var offset: CGSize = .zero
-    @State private var scale: CGFloat = 1
-    @GestureState private var dragTranslation: CGSize = .zero
+    @GestureState private var panTranslation: CGSize = .zero
     @GestureState private var pinchScale: CGFloat = 1
 
     var body: some View {
         GeometryReader { geometry in
-            let currentScale = Self.clamp(scale * pinchScale)
-            let currentOffset = CGSize(
-                width: offset.width + dragTranslation.width / currentScale,
-                height: offset.height + dragTranslation.height / currentScale
-            )
-            let step = Self.cellSize * currentScale
-            // Screen location of the centre of cell (0, 0).
-            let origin = CGPoint(
-                x: geometry.size.width / 2 + currentOffset.width * currentScale,
-                y: geometry.size.height / 2 + currentOffset.height * currentScale
-            )
+            let live = camera.adjusted(pan: panTranslation, pinch: pinchScale)
 
             ZStack {
-                GridLines(origin: origin, step: step)
+                GridLines(origin: live.origin(in: geometry.size), step: live.step)
 
                 ForEach(Array(board.tiles), id: \.value.id) { cell, tile in
-                    TileView(tile: tile, size: step - 2)
-                        .position(
-                            x: origin.x + CGFloat(cell.column) * step,
-                            y: origin.y + CGFloat(cell.row) * step
-                        )
+                    TileView(tile: tile, size: live.step - 2)
+                        .opacity(tile.id == draggingTileID ? 0.3 : 1)
+                        .draggableTile(tile, handlers: dragHandlers)
+                        .position(live.center(of: cell, in: geometry.size))
                 }
             }
             .contentShape(.rect)
             .onTapGesture { location in
-                onTapCell(GridPosition(
-                    row: Int(((location.y - origin.y) / step).rounded()),
-                    column: Int(((location.x - origin.x) / step).rounded())
-                ))
+                onTapCell(live.cell(at: location, in: geometry.size))
             }
             .gesture(
                 DragGesture()
-                    .updating($dragTranslation) { value, state, _ in state = value.translation }
-                    .onEnded { value in
-                        offset.width += value.translation.width / currentScale
-                        offset.height += value.translation.height / currentScale
-                    }
+                    .updating($panTranslation) { value, state, _ in state = value.translation }
+                    .onEnded { value in camera = camera.adjusted(pan: value.translation, pinch: 1) }
                     .simultaneously(with:
                         MagnifyGesture()
                             .updating($pinchScale) { value, state, _ in state = value.magnification }
-                            .onEnded { value in scale = Self.clamp(scale * value.magnification) }
+                            .onEnded { value in camera = camera.adjusted(pan: .zero, pinch: value.magnification) }
                     )
             )
         }
         .background(Color(.secondarySystemBackground))
         .clipped()
         .accessibilityLabel("Board")
-    }
-
-    private static func clamp(_ value: CGFloat) -> CGFloat {
-        min(max(value, scaleRange.lowerBound), scaleRange.upperBound)
     }
 }
 
