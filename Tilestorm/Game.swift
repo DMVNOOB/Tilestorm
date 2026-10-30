@@ -1,12 +1,21 @@
+import Foundation
 import Observation
 import TileEngine
 
-/// Local solo game state. Rules live in TileEngine's SoloGame; this adds UI concerns like selection.
+/// Local solo game state. Rules live in TileEngine's SoloGame; this adds UI concerns like selection and timing.
 @Observable
 final class Game {
-    private(set) var state = SoloGame()
+    /// Starts as an empty placeholder so creating a Game doesn't load the word list; `start(_:)` sets the real one.
+    private(set) var state = SoloGame(bag: TileBag(tiles: []), player: PlayerTiles(), wordList: WordList([]))
     private(set) var selectedTileID: Tile.ID?
+    private(set) var startedAt = Date()
+    private(set) var finishedAt: Date?
     var showFinished = false
+
+    /// How long the game took, once it's finished.
+    var duration: Duration? {
+        finishedAt.map { .seconds($0.timeIntervalSince(startedAt).rounded()) }
+    }
 
     var bag: TileBag { state.bag }
     var rack: [Tile] { state.player.rack }
@@ -45,7 +54,7 @@ final class Game {
     init() {
         #if DEBUG
         if let scenario = Scenario.fromLaunchArguments {
-            state = scenario.makeGame()
+            start(scenario)
         }
         #endif
     }
@@ -53,8 +62,19 @@ final class Game {
     func start(_ state: SoloGame) {
         self.state = state
         selectedTileID = nil
+        startedAt = Date()
+        finishedAt = nil
         showFinished = false
     }
+
+    #if DEBUG
+    func start(_ scenario: Scenario) {
+        start(scenario.makeGame())
+        if scenario.finishesImmediately {
+            draw()
+        }
+    }
+    #endif
 
     func toggleSelection(_ tile: Tile) {
         selectedTileID = selectedTileID == tile.id ? nil : tile.id
@@ -99,6 +119,7 @@ final class Game {
 
     func draw() {
         if (try? state.draw()) == .finished {
+            finishedAt = Date()
             showFinished = true
         }
     }
