@@ -8,7 +8,8 @@ struct BoardCamera {
     static let scaleRange: ClosedRange<CGFloat> = 0.4...2.5
 
     var offset: CGSize = .zero
-    var scale: CGFloat = 1
+    /// Starts zoomed out so there's room to see where words could go.
+    var scale: CGFloat = 0.6
 
     var step: CGFloat { Self.cellSize * scale }
 

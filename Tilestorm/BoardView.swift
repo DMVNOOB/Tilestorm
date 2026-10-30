@@ -6,6 +6,7 @@ struct BoardView: View {
     let board: Board
     @Binding var camera: BoardCamera
     var draggingTileID: Tile.ID?
+    var invalidCells: Set<GridPosition> = []
     let dragHandlers: TileDragHandlers
     let onTapCell: (GridPosition) -> Void
 
@@ -20,7 +21,7 @@ struct BoardView: View {
                 GridLines(origin: live.origin(in: geometry.size), step: live.step)
 
                 ForEach(Array(board.tiles), id: \.value.id) { cell, tile in
-                    TileView(tile: tile, size: live.step - 2)
+                    TileView(tile: tile, size: live.step - 2, isInvalid: invalidCells.contains(cell))
                         .opacity(tile.id == draggingTileID ? 0.3 : 1)
                         .draggableTile(tile, handlers: dragHandlers)
                         .position(live.center(of: cell, in: geometry.size))

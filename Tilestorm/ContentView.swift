@@ -16,7 +16,7 @@ struct ContentView: View {
                 Spacer()
                 Text("\(game.bag.count) in bag")
                     .foregroundStyle(.secondary)
-                Button("New Game", action: game.newGame)
+                Button("New Game", action: newGame)
                     .buttonStyle(.bordered)
             }
             .padding()
@@ -25,6 +25,7 @@ struct ContentView: View {
                 board: game.board,
                 camera: $camera,
                 draggingTileID: draggedTile?.tile.id,
+                invalidCells: game.invalidCells,
                 dragHandlers: dragHandlers,
                 onTapCell: game.tapCell
             )
@@ -35,10 +36,16 @@ struct ContentView: View {
                     .disabled(!game.canSwapSelection)
                     .accessibilityHint("Returns the selected tile to the bag and draws three")
                 Spacer()
-                Button("Draw", systemImage: "plus", action: game.draw)
+                Text(game.status)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                Spacer()
+                Button(game.drawTitle, systemImage: game.bag.isEmpty ? "flag.checkered" : "plus", action: game.draw)
                     .buttonStyle(.borderedProminent)
                     .disabled(!game.canDraw)
-                    .accessibilityHint("Takes one tile from the bag. Available when every tile is on the board")
+                    .accessibilityHint("Available when every tile is on the board in valid, connected words")
             }
             .buttonStyle(.bordered)
             .padding(.horizontal)
@@ -63,6 +70,15 @@ struct ContentView: View {
                     .allowsHitTesting(false)
             }
         }
+        .alert("You used every tile!", isPresented: $game.showFinished) {
+            Button("New Game", action: newGame)
+            Button("Keep Looking", role: .cancel) {}
+        }
+    }
+
+    private func newGame() {
+        game.newGame()
+        camera = BoardCamera()
     }
 
     private var dragHandlers: TileDragHandlers {

@@ -1,12 +1,18 @@
 import Testing
 @testable import TileEngine
 
-private func makeGame(distribution: [Character: Int] = TileDistribution.standard) -> SoloGame {
+/// A row of the starting hand's 21 "A" tiles, accepted as a word so draw tests control validity.
+private let rowOfAs = String(repeating: "A", count: 21)
+
+private func makeGame(
+    distribution: [Character: Int] = TileDistribution.standard,
+    wordList: WordList = WordList([rowOfAs])
+) -> SoloGame {
     var rng = SplitMix64(state: 7)
-    return SoloGame(distribution: distribution, using: &rng)
+    return SoloGame(distribution: distribution, wordList: wordList, using: &rng)
 }
 
-/// Places every rack tile on the board in a row, emptying the rack.
+/// Places every rack tile on the board in one row, emptying the rack.
 private func placeWholeRack(_ game: inout SoloGame) throws {
     for tile in game.player.rack {
         try game.put(tile.id, at: GridPosition(row: 0, column: game.player.board.tiles.count))
@@ -20,26 +26,58 @@ private func placeWholeRack(_ game: inout SoloGame) throws {
 }
 
 @Test func drawRequiresEmptyRack() throws {
-    var game = makeGame()
+    var game = makeGame(distribution: ["A": 30])
     #expect(!game.canDraw)
     #expect(throws: SoloGameError.tilesStillOnRack) { try game.draw() }
-    #expect(game.bag.count == 123)
+    #expect(game.bag.count == 9)
 }
 
-@Test func drawTakesOneTileFromBag() throws {
-    var game = makeGame()
+@Test func drawTakesOneTileWhenBoardIsValid() throws {
+    var game = makeGame(distribution: ["A": 30])
     try placeWholeRack(&game)
     #expect(game.canDraw)
-    let drawn = try game.draw()
-    #expect(game.player.rack == [drawn])
-    #expect(game.bag.count == 122)
+    let result = try game.draw()
+    guard case .drew(let tile) = result else {
+        Issue.record("Expected a tile, got \(result)")
+        return
+    }
+    #expect(game.player.rack == [tile])
+    #expect(game.bag.count == 8)
 }
 
-@Test func drawFromEmptyBagThrows() throws {
-    var game = makeGame(distribution: ["A": 21])
+@Test func drawRefusesInvalidWords() throws {
+    var game = makeGame(distribution: ["A": 30], wordList: WordList([]))
     try placeWholeRack(&game)
     #expect(!game.canDraw)
-    #expect(throws: SoloGameError.bagEmpty) { try game.draw() }
+    let word = try #require(game.player.board.words.first)
+    #expect(throws: SoloGameError.boardInvalid([.invalidWords([word])])) { try game.draw() }
+    #expect(game.bag.count == 9)
+}
+
+@Test func drawRefusesDisconnectedBoard() throws {
+    var game = makeGame(distribution: ["A": 30], wordList: WordList(["AA", String(repeating: "A", count: 19)]))
+    let rack = game.player.rack
+    // A 19-letter row, then a separate 2-letter row two lines below.
+    for (column, tile) in rack.prefix(19).enumerated() {
+        try game.put(tile.id, at: GridPosition(row: 0, column: column))
+    }
+    for (column, tile) in rack.suffix(2).enumerated() {
+        try game.put(tile.id, at: GridPosition(row: 2, column: column))
+    }
+    #expect(throws: SoloGameError.boardInvalid([.notConnected])) { try game.draw() }
+}
+
+@Test func drawWithEmptyBagAndValidBoardFinishesGame() throws {
+    var game = makeGame(distribution: ["A": 21])
+    try placeWholeRack(&game)
+    #expect(game.canDraw)
+    #expect(try game.draw() == .finished)
+    #expect(game.isFinished)
+    #expect(!game.canDraw)
+    #expect(!game.canSwap)
+    let tile = try #require(game.player.board.tiles.values.first)
+    #expect(throws: SoloGameError.gameFinished) { try game.returnToRack(tile.id) }
+    #expect(throws: SoloGameError.gameFinished) { try game.draw() }
 }
 
 @Test func swapReturnsOneAndDrawsThree() throws {

@@ -6,16 +6,45 @@ import TileEngine
 final class Game {
     private(set) var state = SoloGame()
     private(set) var selectedTileID: Tile.ID?
+    var showFinished = false
 
     var bag: TileBag { state.bag }
     var rack: [Tile] { state.player.rack }
     var board: Board { state.player.board }
     var canDraw: Bool { state.canDraw }
     var canSwapSelection: Bool { selectedTileID != nil && state.canSwap }
+    var drawTitle: String { bag.isEmpty ? "Finish" : "Draw" }
+
+    /// Board problems only matter once the rack is empty and the player is trying to draw.
+    private var activeProblems: [BoardProblem] {
+        rack.isEmpty && !state.isFinished ? state.boardProblems : []
+    }
+
+    var invalidCells: Set<GridPosition> {
+        var cells: Set<GridPosition> = []
+        for case .invalidWords(let words) in activeProblems {
+            for word in words { cells.formUnion(word.cells) }
+        }
+        return cells
+    }
+
+    var status: String {
+        if state.isFinished { return "Finished!" }
+        if !rack.isEmpty { return rack.count == 1 ? "1 tile to place" : "\(rack.count) tiles to place" }
+        guard let problem = activeProblems.first else {
+            return bag.isEmpty ? "All valid. Tap Finish" : "All valid. Draw a tile"
+        }
+        switch problem {
+        case .noWords: return "Make a word"
+        case .notConnected: return "Connect all your words"
+        case .invalidWords(let words): return "Not words: " + words.map(\.text).joined(separator: ", ")
+        }
+    }
 
     func newGame() {
         state = SoloGame()
         selectedTileID = nil
+        showFinished = false
     }
 
     func toggleSelection(_ tile: Tile) {
@@ -42,7 +71,9 @@ final class Game {
     }
 
     func draw() {
-        try? state.draw()
+        if (try? state.draw()) == .finished {
+            showFinished = true
+        }
     }
 
     func swapSelection() {

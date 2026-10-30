@@ -8,7 +8,11 @@ let package = Package(
         .library(name: "TileEngine", targets: ["TileEngine"]),
     ],
     targets: [
-        .target(name: "TileEngine"),
+        .target(
+            name: "TileEngine",
+            exclude: ["Resources/README.md"],
+            resources: [.copy("Resources/enable1.txt")]
+        ),
         .testTarget(name: "TileEngineTests", dependencies: ["TileEngine"]),
     ]
 )

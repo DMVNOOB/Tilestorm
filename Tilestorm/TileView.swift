@@ -5,6 +5,8 @@ struct TileView: View {
     let tile: Tile
     var size: CGFloat = 44
     var isSelected = false
+    /// Part of a word that isn't in the word list.
+    var isInvalid = false
 
     var body: some View {
         Text(String(tile.letter))
@@ -13,11 +15,18 @@ struct TileView: View {
             .background(Color.tileFace, in: .rect(cornerRadius: size * 0.18))
             .overlay {
                 RoundedRectangle(cornerRadius: size * 0.18)
-                    .strokeBorder(isSelected ? Color.accentColor : .black.opacity(0.15), lineWidth: isSelected ? 3 : 1)
+                    .strokeBorder(borderColor, lineWidth: isSelected || isInvalid ? 3 : 1)
             }
             .foregroundStyle(.black)
             .accessibilityLabel("Tile \(String(tile.letter))")
             .accessibilityAddTraits(isSelected ? .isSelected : [])
+            .accessibilityValue(isInvalid ? "Not in a valid word" : "")
+    }
+
+    private var borderColor: Color {
+        if isSelected { return .accentColor }
+        if isInvalid { return .red }
+        return .black.opacity(0.15)
     }
 }
 
